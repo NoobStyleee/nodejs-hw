@@ -33,6 +33,8 @@ export const loginUser = async (req, res, next) => {
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) throw createError(401, 'Invalid credentials');
 
+    await Session.deleteMany({ userId: user._id });
+
     const session = await createSession(user._id);
     setSessionCookies(res, session);
 
@@ -50,8 +52,16 @@ export const refreshUserSession = async (req, res, next) => {
     if (!session) throw createError(401, 'Session not found');
 
     if (new Date() > new Date(session.refreshTokenValidUntil)) {
+      await Session.deleteOne({ _id: sessionId });
+
+      res.clearCookie('accessToken');
+      res.clearCookie('refreshToken');
+      res.clearCookie('sessionId');
+
       throw createError(401, 'Session token expired');
     }
+
+    await Session.deleteOne({ _id: sessionId });
 
     const newSession = await createSession(session.userId);
     setSessionCookies(res, newSession);
