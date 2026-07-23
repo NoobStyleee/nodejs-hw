@@ -14,7 +14,11 @@ export const updateUserAvatar = async (req, res, next) => {
     );
     const avatarUrl = cloudResult.secure_url;
 
-    await User.findByIdAndUpdate(req.user._id, { avatar: avatarUrl });
+    await User.findByIdAndUpdate(
+      req.user._id,
+      { avatar: avatarUrl },
+      { returnDocument: 'after' },
+    );
 
     res.status(200).json({ url: avatarUrl });
   } catch (error) {
